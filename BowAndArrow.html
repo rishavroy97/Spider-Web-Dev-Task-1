@@ -4,31 +4,87 @@
 	<meta charset="UTF-8">
 	<title>Bow and Arrow</title>
 	<style>
-	canvas {
-		display: block;
-		position: absolute;
-		margin: auto;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		right: 0;
-	}
+		canvas {
+			display: inline;
+			position: relative;
+			margin: auto;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
+		.header{
+		  width:75%;
+		  margin:auto;
+		  min-width: 150px;
+		  background: rgba(15,15,15,.850);
+		  overflow-x: auto;
+		  overflow-y: auto;
+		  text-align: center;
+		  color: #fff;  
+		  line-height: 2rem;
+		}
+
+		h2{
+		  color: #fff;
+		  margin: auto;
+		  font-size: 300%;
+		  text-align: center;
+		  padding: 1rem;
+		  min-width: 150px;
+		  line-height: 2rem;
+		}
+		#button{
+		  width:10rem;
+		  text-align: center;
+		  margin:auto;
+		  cursor: pointer;
+		  color: #000;
+		  background:#ffcc00;
+		  font-size: 2rem;
+		  box-shadow: 0 9px #999;
+		}
+
+		#button:hover{
+		  background: #000;
+		  color: #FFCC00;
+		}
+
+		#button:active{
+		  box-shadow: 0 5px #666;
+		  transform: translateY(4px);
+		}
+		.buttons-div{
+		  /*margin: auto;*/
+		  bottom: 0;
+		}
+
 	</style>
 </head>
 <body>
+	<div class= "header">
+		<h2>Bow And Arrow</h2>
+		Press Up/Down Cursor to move the Bow. Press Space to release the arrow.
+	</div>
+	<div id = "game"></div>
+	<div class="buttons-div">
+		<span id = "button" onclick="start()">START</span>  
+        <span id = "button" onclick="stop()">PAUSE</span> 
+        <span id = "button" onclick="restart()">RESTART</span>
+	</div>
 <script>
-
+var timer = null;
+var shoot = false;
 var
 
 // Constants
 
 WIDTH  = 900,
-HEIGHT = 600,
-//pi = Math.PI,
+HEIGHT = 400,
 UpArrow   = 38,
 DownArrow = 40,
 Spacebar = 32,
-
+score = 0,
 // Game elements
  
 canvas,
@@ -41,6 +97,11 @@ player = {
 	y: null,
 	width:  100,
 	height: 100,
+
+	init : function(){
+		this.x = this.width;
+		this.y = (HEIGHT - this.height)/2;
+	},
 	
 	//  Update the position depending on pressed keys
 	 
@@ -58,6 +119,99 @@ player = {
 		img.src = 'image.png';
 		ctx.drawImage(img,this.x, this.y, this.width, this.height);
 	}
+},
+
+bullseye = {
+	x:null,
+	y:null,
+	r1: 15,
+	r2: 30,
+	r3: 45,
+	speed : 5,
+	vel : null,
+
+	init : function(){
+		this.x = WIDTH-60;
+		this.y = HEIGHT/2;
+		this.vel = {
+		  	x : 0,
+	  		y : this.speed
+		}
+	},
+
+	update : function(){
+		this.y += this.vel.y;
+		if(this.y-15<this.r3 || this.y+15>(HEIGHT-this.r3)){
+		  this.vel.y *= -1;
+		}
+	},
+
+	draw : function(){
+		ctx.beginPath();
+      	ctx.arc(this.x, this.y, this.r1, 0, 2 * Math.PI);
+      	ctx.lineWidth = 5;
+      	ctx.strokeStyle = '#ff0000';
+      	ctx.stroke();
+      	ctx.beginPath();
+      	ctx.arc(this.x, this.y, this.r2, 0, 2 * Math.PI);
+      	ctx.lineWidth = 5;
+      	ctx.strokeStyle = '#0000ff';
+      	ctx.stroke();
+      	ctx.beginPath();
+      	ctx.arc(this.x, this.y, this.r3, 0, 2 * Math.PI);
+      	ctx.lineWidth = 5;
+      	ctx.strokeStyle = '#00ff00';
+      	ctx.stroke();
+		},
+},
+
+
+arrows = {
+	x: null,
+	y: null,
+	width: 100,
+	height:20,
+	speed: 5,
+	vel: null,
+
+	init : function(){
+		this.x = player.x;
+		this.y = (HEIGHT-this.height)/2;
+		this.vel = {
+			x : 0,
+			y : 0
+		}
+	},
+
+	update: function(){
+		/*function shoot(){
+			while(this.x < WIDTH){
+				this.vel.x = this.speed;
+				this.x += this.vel.x;
+				setTimeout(shoot,6);
+			}
+		}
+		if(keystate[Spacebar]){
+			shoot();
+		}*/
+		if(keystate[Spacebar]){
+			this.vel.x = this.speed;
+			this.x += this.vel.x;
+			this.x = Math.min(this.x, WIDTH - bullseye.r3 - this.width);
+
+		}
+		else{
+			if (keystate[UpArrow]) this.y -= 7;
+			if (keystate[DownArrow]) this.y += 7;
+
+			this.y = Math.max(Math.min(this.y, HEIGHT - player.height/2 - this.height/2), (player.height-this.height)/2);
+		}
+	},
+	draw: function(){
+		var arrowImg = new Image();   
+		arrowImg.src = 'arrow_image.png';
+		ctx.drawImage(arrowImg,this.x, this.y, this.width, this.height);
+	}
 };
 
 
@@ -67,7 +221,8 @@ function main() {
 	canvas.width = WIDTH;
 	canvas.height = HEIGHT;
 	ctx = canvas.getContext("2d");
-	document.body.appendChild(canvas);
+	//document.body.appendChild(canvas);
+	document.getElementById("game").appendChild(canvas);
 	
 	keystate = {};
 	// keep track of keyboard presses
@@ -77,29 +232,53 @@ function main() {
 	document.addEventListener("keyup", function(evt) {
 		delete keystate[evt.keyCode];
 	});
-	
+	document.addEventListener("keypress", function(evt){
+		keystate[evt.keyCode] = true;
+	},false);
+
 	// function to initializing game objects
 	init();
 	// game loop function
 	var loop = function() {
 		update();
 		draw();
+		//setTimeout(loop,30);
 		window.requestAnimationFrame(loop, canvas);
 	};
 	window.requestAnimationFrame(loop, canvas);
+	//loop();
 }
 
 //Initatialize game objects and setting starting values
 
 function init() {
-	player.x = player.width;
-	player.y = (HEIGHT - player.height)/2;
+	player.init();
+	bullseye.init();
+	arrows.init();
+	score = 0;
 }
 
 //Update all game objects
 
 function update() {
 	player.update();
+	bullseye.update();
+	arrows.update();
+	if(arrows.x === WIDTH - bullseye.r3 - arrows.width){
+		arrows.x += 0;
+		/*if((arrows.y >= (bullseye.y - bullseye.r1)) && ((arrows.y <= (bullseye.y + bullseye.r1)))
+			score += 150;
+		else if((arrows.y >= (bullseye.y - bullseye.r2)) && ((arrows.y <= (bullseye.y + bullseye.r2)))
+			score += 100;
+		else if((arrows.y >= (bullseye.y - bullseye.r3)) && ((arrows.y <= (bullseye.y + bullseye.r3)))
+			score += 50;
+		else
+			score +=0;*/
+		console.log(score);
+		player.init();
+		arrows.init();
+	}
+
 }
 
 //Clear canvas and draw all game objects and net
@@ -107,9 +286,12 @@ function update() {
 function draw() {
 	ctx.clearRect(0,0,WIDTH,HEIGHT);
 	player.draw();
+	bullseye.draw();
+	arrows.draw();
 }
 
 // start and run the game
+
 main();
 
 </script>
