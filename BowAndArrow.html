@@ -76,19 +76,21 @@
 	<div id="score">Score : 0</div>
 	<div class="buttons-div">
 		<span id = "button" onclick="start()">START</span>  
-        <span id = "button" onclick="stop()">PAUSE</span> 
-        <span id = "button" onclick="restart()">RESTART</span>
+        <span id = "button" onclick="pause()">PAUSE</span> 
+        <span id = "button" onclick="resume()">RESUME</span>
 	</div>
 <script>
-var timer = null;
+var gameCondition = null;
 var shoot = false;
 var Scoreboard = document.getElementById("score");
+var startButtonPress = 0;
+var arrowNumber = 20;
 var
 
 // Constants
 
 WIDTH  = 1000,
-HEIGHT = 400,
+HEIGHT = 300,
 UpArrow   = 38,
 DownArrow = 40,
 Spacebar = 32,
@@ -114,8 +116,8 @@ player = {
 	//  Update the position depending on pressed keys
 	 
 	update: function() {
-		if (keystate[UpArrow]) this.y -= 7;
-		if (keystate[DownArrow]) this.y += 7;
+		if (keystate[UpArrow] || keystate[87]) this.y -= 7;
+		if (keystate[DownArrow] || keystate[83]) this.y += 7;
 		// keep the bow inside the canvas
 		this.y = Math.max(Math.min(this.y, HEIGHT - this.height), 0);
 	},
@@ -220,30 +222,9 @@ arrows = {
 };
 
 
-function main() {
-	// create, initiate and append game canvas
-	canvas = document.createElement("canvas");
-	canvas.width = WIDTH;
-	canvas.height = HEIGHT;
-	ctx = canvas.getContext("2d");
-	//document.body.appendChild(canvas);
-	document.getElementById("game").appendChild(canvas);
+function game() {
 	
-	keystate = {};
-	// keep track of keyboard presses
-	document.addEventListener("keydown", function(evt) {
-		keystate[evt.keyCode] = true;
-	});
-	document.addEventListener("keyup", function(evt) {
-		delete keystate[evt.keyCode];
-	});
-	document.addEventListener("keypress", function(evt){
-		keystate[evt.keyCode] = true;
-		shoot = true;
-	},false);
-
-	// function to initializing game objects
-	init();
+	
 	// game loop function
 	var loop = function() {
 		update();
@@ -288,6 +269,11 @@ function update() {
 			score += 0;
 			Scoreboard.innerHTML = "Missed<br>Score :  " + score;
 		}
+		arrowNumber -= 1;
+		if(arrowNumber === 0){
+			Scoreboard.innerHTML = "Game Over <br> Score : " + score;
+			return;
+		}
 		//console.log(score);
 		player.init();
 		arrows.init();
@@ -304,9 +290,67 @@ function draw() {
 	arrows.draw();
 }
 
-// start and run the game
 
-main();
+// create, initiate and append game canvas
+canvas = document.createElement("canvas");
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+ctx = canvas.getContext("2d");
+document.getElementById("game").appendChild(canvas);
+
+keystate = {};
+	// keep track of keyboard presses
+	document.addEventListener("keydown", function(evt) {
+		keystate[evt.keyCode] = true;
+	});
+	document.addEventListener("keyup", function(evt) {
+		delete keystate[evt.keyCode];
+	});
+	document.addEventListener("keypress", function(evt){
+		keystate[evt.keyCode] = true;
+		shoot = true;
+	},false);
+
+	
+
+
+function start() {
+  
+  if (gameCondition !== null) return;
+  
+  shoot = false;
+  arrowNumber = 20;
+  init();
+  if(startButtonPress === 0){
+  	game();
+  }
+  startButtonPress +=1;
+  resume();
+ Scoreboard.innerHTML = "Score : 0";
+  gameCondition = 1;
+}
+
+function pause() {
+ 
+  if (gameCondition === null) return;
+
+ 	gameCondition = null;
+ 	
+ 	arrows.speed = 0;
+ 	bullseye.vel.y = 0;
+ 	update();
+}
+
+function resume(){
+  
+  if (gameCondition !== null) return;
+  
+  gameCondition = 1;
+
+  arrows.speed = 5;
+  bullseye.vel.y = 5;
+  update();
+ }
 
 </script>
 </body>
