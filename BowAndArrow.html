@@ -34,6 +34,12 @@
 		  min-width: 150px;
 		  line-height: 2rem;
 		}
+		#score{
+			margin: auto;
+			text-align: center;
+			padding: 1rem;
+			font-size: 2rem;
+		}
 		#button{
 		  width:10rem;
 		  text-align: center;
@@ -67,6 +73,7 @@
 		Press Up/Down Cursor to move the Bow. Press Space to release the arrow.
 	</div>
 	<div id = "game"></div>
+	<div id="score">Score : 0</div>
 	<div class="buttons-div">
 		<span id = "button" onclick="start()">START</span>  
         <span id = "button" onclick="stop()">PAUSE</span> 
@@ -75,11 +82,12 @@
 <script>
 var timer = null;
 var shoot = false;
+var Scoreboard = document.getElementById("score");
 var
 
 // Constants
 
-WIDTH  = 900,
+WIDTH  = 1000,
 HEIGHT = 400,
 UpArrow   = 38,
 DownArrow = 40,
@@ -183,20 +191,17 @@ arrows = {
 		}
 	},
 
+	arrowmove : function(){
+		this.vel.x = this.speed;
+		this.x += this.vel.x;
+	},
+
 	update: function(){
-		/*function shoot(){
-			while(this.x < WIDTH){
-				this.vel.x = this.speed;
-				this.x += this.vel.x;
-				setTimeout(shoot,6);
-			}
-		}
-		if(keystate[Spacebar]){
-			shoot();
-		}*/
-		if(keystate[Spacebar]){
-			this.vel.x = this.speed;
-			this.x += this.vel.x;
+		
+		if(keystate[Spacebar] || shoot === true){
+			this.arrowmove();
+			if(this.x >= WIDTH - bullseye.r3 - this.width)
+				shoot = false;
 			this.x = Math.min(this.x, WIDTH - bullseye.r3 - this.width);
 
 		}
@@ -234,6 +239,7 @@ function main() {
 	});
 	document.addEventListener("keypress", function(evt){
 		keystate[evt.keyCode] = true;
+		shoot = true;
 	},false);
 
 	// function to initializing game objects
@@ -266,15 +272,23 @@ function update() {
 	arrows.update();
 	if(arrows.x === WIDTH - bullseye.r3 - arrows.width){
 		arrows.x += 0;
-		/*if((arrows.y >= (bullseye.y - bullseye.r1)) && ((arrows.y <= (bullseye.y + bullseye.r1)))
+		if ((arrows.y >= bullseye.y - bullseye.r1) && (arrows.y <= bullseye.y + bullseye.r1)) {
 			score += 150;
-		else if((arrows.y >= (bullseye.y - bullseye.r2)) && ((arrows.y <= (bullseye.y + bullseye.r2)))
+			Scoreboard.innerHTML = "Bullseye!!!<br>Score :  " + score;
+		}
+		else if ((arrows.y >= bullseye.y - bullseye.r2) && (arrows.y <= bullseye.y + bullseye.r2)) {
 			score += 100;
-		else if((arrows.y >= (bullseye.y - bullseye.r3)) && ((arrows.y <= (bullseye.y + bullseye.r3)))
+			Scoreboard.innerHTML = "Just Missed the centre!<br>Score :  " + score;
+		}
+		else if ((arrows.y >= bullseye.y - bullseye.r3) && (arrows.y <= bullseye.y + bullseye.r3)) {
 			score += 50;
-		else
-			score +=0;*/
-		console.log(score);
+			Scoreboard.innerHTML = "Hit the rim!<br>Score :  " + score;
+		}
+		else{
+			score += 0;
+			Scoreboard.innerHTML = "Missed<br>Score :  " + score;
+		}
+		//console.log(score);
 		player.init();
 		arrows.init();
 	}
